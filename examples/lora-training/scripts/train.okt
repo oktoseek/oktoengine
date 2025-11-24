@@ -1,0 +1,39 @@
+# okto_version: "1.0"
+
+PROJECT "LoRAModel"
+DESCRIPTION "LoRA fine-tuning example for efficient training"
+
+ENV {
+  accelerator: "gpu"
+  min_memory: "8GB"
+  precision: "fp16"
+  install_missing: true
+}
+
+DATASET {
+  train: "dataset/train.jsonl"
+  validation: "dataset/val.jsonl"
+}
+
+MODEL {
+  base: "gpt2"
+}
+
+TRAIN {
+  epochs: 3
+  batch_size: 16
+  device: "auto"
+  learning_rate: 0.00003
+}
+
+FT_LORA {
+  lora_rank: 8
+  lora_alpha: 32
+  target_modules: ["q_proj", "v_proj"]
+}
+
+EXPORT {
+  format: ["safetensors", "okm"]
+  path: "export/"
+}
+
