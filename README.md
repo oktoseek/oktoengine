@@ -246,6 +246,43 @@ okto export --format onnx
 ```
 Exports trained models to various formats.
 
+**Convert Model Formats:**
+```bash
+okto convert --input model.pt --from pt --to gguf --output model.gguf
+okto convert --input model.pt --from pt --to onnx --output model.onnx
+```
+Converts models between different formats (PyTorch, ONNX, GGUF, TFLite, OktoModel).
+
+**Direct Inference:**
+```bash
+okto infer --model models/chatbot.okm --text "Hello, how can I help?"
+```
+Runs single inference on a trained model. Automatically respects BEHAVIOR, GUARD, INFERENCE, and CONTROL blocks.
+
+**Interactive Chat:**
+```bash
+okto chat --model models/chatbot.okm
+```
+Starts an interactive chat session. Uses BEHAVIOR settings, enforces GUARD rules, and supports session context.
+
+**Compare Models:**
+```bash
+okto compare models/v1.okm models/v2.okm
+```
+Compares two models on latency, accuracy, loss, and resource usage.
+
+**View Logs:**
+```bash
+okto logs my-model
+```
+Views historical training logs, metrics, and CONTROL decisions.
+
+**Auto-tune Training:**
+```bash
+okto tune
+```
+Uses CONTROL block to auto-adjust training parameters (learning rate, batch size, early stopping).
+
 ### Utility Commands
 
 **System Diagnostics:**
@@ -258,6 +295,23 @@ okto doctor --install    # Auto-install dependencies
 ```bash
 okto upgrade
 ```
+
+**List Resources:**
+```bash
+okto list projects
+okto list models
+okto list datasets
+okto list exports
+```
+
+**Other Commands:**
+```bash
+okto about      # Show information
+okto --version  # Show version
+okto exit       # Exit interactive mode
+```
+
+📚 **Complete CLI Reference:** [`docs/CLI_REFERENCE.md`](./docs/CLI_REFERENCE.md)
 Automatically updates to the latest version.
 
 **About:**

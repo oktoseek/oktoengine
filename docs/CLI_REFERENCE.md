@@ -29,10 +29,17 @@ okto [FLAGS] <COMMAND>
 | `train` | Train a model | `okto train [--file <path>]` |
 | `eval` | Evaluate a model | `okto eval [--file <path>]` |
 | `export` | Export a model | `okto export [--format <fmt>] [--file <path>]` |
-| `list` | List resources | `okto list <projects|models|datasets>` |
+| `convert` | Convert model formats | `okto convert --input <path> --from <fmt> --to <fmt> --output <path>` |
+| `infer` | Direct inference (single input/output) | `okto infer --model <path> --text "<input>"` |
+| `chat` | Interactive chat mode | `okto chat --model <path>` |
+| `compare` | Compare two models | `okto compare <model1> <model2>` |
+| `logs` | View historical logs | `okto logs <model_or_run_id>` |
+| `tune` | Auto-tune training | `okto tune [--file <path>]` |
+| `list` | List resources | `okto list <projects|models|datasets|exports>` |
 | `doctor` | System diagnostics | `okto doctor [--install]` |
 | `about` | Show information | `okto about` |
 | `upgrade` | Upgrade engine | `okto upgrade` |
+| `exit` | Exit interactive mode | `okto exit` |
 
 ---
 
@@ -297,6 +304,516 @@ okto list datasets
 
 ---
 
+### `okto convert`
+
+Convert a trained model between different formats.
+
+**Usage:**
+```bash
+okto convert --input <model_path> --from <format> --to <format> --output <output_path>
+```
+
+**Options:**
+- `--input <PATH>` - Path to input model file
+- `--from <FORMAT>` - Source format (pt, bin, onnx, tflite, gguf, okm, safetensors)
+- `--to <FORMAT>` - Target format (onnx, tflite, gguf, okm, safetensors)
+- `--output <PATH>` - Path to output file
+
+**Supported Formats:**
+
+| Format | From | To | Usage |
+|--------|------|-----|-------|
+| `pt`, `bin` | ✅ | ❌ | PyTorch format |
+| `onnx` | ✅ | ✅ | Web / Interoperability |
+| `tflite` | ✅ | ✅ | Mobile (Android / iOS) |
+| `gguf` | ✅ | ✅ | Local LLMs (llama.cpp) |
+| `okm` | ✅ | ✅ | Okto Model Format |
+| `safetensors` | ✅ | ✅ | Safe and fast |
+
+**Examples:**
+
+```bash
+# PyTorch → GGUF (local inference)
+okto convert --input model.pt --from pt --to gguf --output model.gguf
+
+# PyTorch → TFLite (mobile)
+okto convert --input model.pt --from pt --to tflite --output model.tflite
+
+# PyTorch → ONNX (web)
+okto convert --input model.pt --from pt --to onnx --output model.onnx
+
+# ONNX → OktoModel (OktoSeek optimized)
+okto convert --input model.onnx --from onnx --to okm --output model.okm
+```
+
+**Output:**
+```
+🐙 OktoEngine v0.1
+🔄 Converting model...
+
+📦 Input: model.pt (PyTorch format)
+📦 Output: model.gguf (GGUF format)
+
+⏳ Converting...
+  ✓ Loading model: model.pt
+  ✓ Quantizing to GGUF...
+  ✓ Writing output: model.gguf
+
+✅ Conversion completed!
+📁 Output: model.gguf (245 MB)
+```
+
+---
+
+### `okto infer`
+
+Run direct inference on a trained model (single input/output).
+
+**Usage:**
+```bash
+okto infer --model <model_path> --text "<input>"
+```
+
+**Options:**
+- `--model <PATH>` - Path to trained model
+- `--text <STRING>` - Input text for inference
+
+**What it respects:**
+- `BEHAVIOR` block settings (personality, verbosity, language)
+- `GUARD` block rules (safety, content filtering)
+- `INFERENCE` block parameters (temperature, max_length, etc.)
+- `CONTROL` block logic (if defined)
+
+**Example:**
+```bash
+okto infer --model models/pizzabot.okm --text "Good evening, I want a pizza"
+```
+
+**Output:**
+```
+🐙 OktoEngine v0.1
+🤖 Loading model: models/pizzabot.okm
+
+📋 Model Configuration:
+  ✓ BEHAVIOR: friendly, medium verbosity, English
+  ✓ GUARD: toxicity, bias, hallucination protection enabled
+  ✓ INFERENCE: temperature=0.7, max_length=120
+
+💭 Input: "Good evening, I want a pizza"
+
+🤖 Processing...
+  ✓ Guard check passed
+  ✓ Inference parameters applied
+  ✓ CONTROL rules evaluated
+
+📤 Output: "Good evening! I'd be happy to help you order a pizza. What size and toppings would you like?"
+
+✅ Inference completed in 0.23s
+```
+
+**Advanced Example with Multiple Inputs:**
+```bash
+# Single inference
+okto infer --model models/chatbot.okm --text "What are your business hours?"
+
+# Batch inference (via file)
+echo "What are your business hours?" > input.txt
+echo "Do you deliver?" >> input.txt
+okto infer --model models/chatbot.okm --file input.txt
+```
+
+**Error Handling:**
+```
+⚠️  Guard violation detected: toxicity
+🛡️  Content blocked by GUARD rules
+📤 Output: "Sorry, this request is not allowed."
+```
+
+---
+
+### `okto chat`
+
+Start an interactive chat session with a trained model.
+
+**Usage:**
+```bash
+okto chat --model <model_path>
+```
+
+**Options:**
+- `--model <PATH>` - Path to trained model
+
+**Features:**
+- Uses `prompt_style` from BEHAVIOR block
+- Respects BEHAVIOR settings (personality, verbosity, language)
+- Enforces GUARD rules in real-time
+- Can use MEMORY in the future (session context)
+- Type `/exit` or `exit` to quit
+
+**Example:**
+```bash
+okto chat --model models/pizzabot.okm
+```
+
+**Interactive Session:**
+```
+🐙 OktoEngine v0.1
+🤖 Loading model: models/pizzabot.okm
+
+📋 Model Configuration:
+  ✓ BEHAVIOR: friendly, medium verbosity, English
+  ✓ GUARD: enabled
+  ✓ INFERENCE: chat mode
+  ✓ Exit command: /exit
+
+🟢 Okto Chat started (type '/exit' to quit)
+
+─────────────────────────────────────────
+
+You: hi
+Bot: Hello! How can I help you today?
+
+You: what flavors do you have?
+Bot: We have a great selection of pizza flavors! Here are some popular options:
+
+  • Margherita - Classic tomato, mozzarella, and basil
+  • Pepperoni - Spicy pepperoni with mozzarella
+  • Four Cheese - Mozzarella, gorgonzola, parmesan, and provolone
+  • Hawaiian - Ham and pineapple
+  • Vegetarian - Fresh vegetables and herbs
+
+  What sounds good to you?
+
+You: do you deliver?
+Bot: Yes, we offer delivery! Our delivery service is available in your area. 
+
+  Delivery time is typically 30-45 minutes, and we have a minimum order of $15 for delivery. 
+
+  Would you like to place an order?
+
+You: /exit
+🔴 Session ended
+
+📊 Session Summary:
+  Messages: 6 (3 user, 3 bot)
+  Duration: 2m 15s
+  Guard checks: 3 (all passed)
+```
+
+**Advanced Features:**
+```
+You: tell me a joke
+Bot: I'd love to share a joke! Here's a light one:
+
+  Why did the pizza maker go to art school?
+  Because they wanted to learn how to make a masterpiece!
+
+  🍕 Hope that made you smile! Is there anything else I can help you with?
+
+You: [tries to input toxic content]
+🛡️  Guard: Content violation detected
+Bot: I cannot assist with that request. How else can I help you?
+
+You: /exit
+🔴 Session ended
+```
+
+**Session Context (Future):**
+```
+You: my name is John
+Bot: Nice to meet you, John! How can I help you today?
+
+You: what's my name?
+Bot: Your name is John! Is there anything else you'd like to know?
+```
+
+---
+
+### `okto compare`
+
+Compare two trained models using the same test inputs.
+
+**Usage:**
+```bash
+okto compare <model1> <model2>
+```
+
+**Options:**
+- `<model1>` - Path to first model
+- `<model2>` - Path to second model
+
+**What it compares:**
+- Latency (inference speed)
+- Accuracy (if test dataset provided)
+- Loss values
+- Response quality
+- Resource usage
+
+**Example:**
+```bash
+okto compare models/pizza_v1.okm models/pizza_v2.okm
+```
+
+**Output:**
+```
+🐙 OktoEngine v0.1
+📊 Comparing models...
+
+📦 Model 1: models/pizza_v1.okm
+📦 Model 2: models/pizza_v2.okm
+
+⏳ Running comparison tests...
+  ✓ Loading models...
+  ✓ Running inference on 100 test samples...
+  ✓ Measuring metrics...
+
+📈 Comparison Results:
+
+┌─────────────────────┬──────────────┬──────────────┬─────────────┐
+│ Metric              │ Model 1 (V1) │ Model 2 (V2) │ Difference  │
+├─────────────────────┼──────────────┼──────────────┼─────────────┤
+│ Latency (avg)       │ 245ms        │ 189ms        │ V2 -23% ⚡  │
+│ Accuracy            │ 0.892        │ 0.856        │ V1 +4% 📈  │
+│ Loss                │ 1.234        │ 1.156        │ V2 -6% 📉  │
+│ GPU Memory          │ 2.1GB        │ 2.3GB        │ V2 +9%     │
+│ Response Quality    │ 8.5/10       │ 8.2/10       │ V1 +0.3    │
+└─────────────────────┴──────────────┴──────────────┴─────────────┘
+
+💡 Recommendation: V2
+   • 23% faster inference
+   • Lower loss
+   • Slightly lower accuracy (acceptable trade-off)
+
+✅ Comparison completed!
+```
+
+**With Test Dataset:**
+```bash
+okto compare models/v1.okm models/v2.okm --dataset dataset/test.jsonl
+```
+
+---
+
+### `okto logs`
+
+View historical training logs and metrics saved by CONTROL and MONITOR blocks.
+
+**Usage:**
+```bash
+okto logs <model_or_run_id>
+```
+
+**Options:**
+- `<model_or_run_id>` - Model name or run ID
+
+**What it shows:**
+- Loss per epoch
+- Validation loss
+- Accuracy metrics
+- CPU/GPU/RAM usage
+- Decisions made by CONTROL block
+- System metrics from MONITOR block
+
+**Example:**
+```bash
+okto logs pizzabot_v1
+```
+
+**Output:**
+```
+🐙 OktoEngine v0.1
+📊 Viewing logs for: pizzabot_v1
+
+📁 Log file: runs/pizzabot_v1/logs/training.log
+
+═══════════════════════════════════════════════════════════
+📈 Training Metrics
+═══════════════════════════════════════════════════════════
+
+Epoch 1:
+  Loss: 2.345 → 1.892
+  Val Loss: 2.123 → 1.756
+  Accuracy: 0.654 → 0.723
+  GPU Usage: 78% (9.2GB / 12GB)
+  RAM Usage: 12.3GB
+
+Epoch 2:
+  Loss: 1.892 → 1.654
+  Val Loss: 1.756 → 1.523
+  Accuracy: 0.723 → 0.789
+  GPU Usage: 82% (9.8GB / 12GB)
+  RAM Usage: 12.5GB
+
+Epoch 3:
+  Loss: 1.654 → 1.456
+  Val Loss: 1.523 → 1.312
+  Accuracy: 0.789 → 0.834
+  GPU Usage: 85% (10.1GB / 12GB)
+  RAM Usage: 12.7GB
+  ⚠️  CONTROL: High loss detected, reducing learning rate
+  ✓ CONTROL: Learning rate set to 0.00005
+
+Epoch 4:
+  Loss: 1.456 → 1.234
+  Val Loss: 1.312 → 1.156
+  Accuracy: 0.834 → 0.867
+  GPU Usage: 88% (10.5GB / 12GB)
+  RAM Usage: 12.9GB
+  ✓ CONTROL: Best model saved (accuracy > 0.85)
+
+Epoch 5:
+  Loss: 1.234 → 1.123
+  Val Loss: 1.156 → 1.089
+  Accuracy: 0.867 → 0.892
+  GPU Usage: 90% (10.8GB / 12GB)
+  RAM Usage: 13.1GB
+  ✓ CONTROL: Training completed successfully
+
+═══════════════════════════════════════════════════════════
+🎯 CONTROL Decisions
+═══════════════════════════════════════════════════════════
+
+Step 500:
+  ✓ LOG: loss = 1.892
+
+Step 1000:
+  ✓ SAVE: checkpoint saved
+
+Epoch 3, Step 1500:
+  ⚠️  IF loss > 2.0: SET LR = 0.00005
+  ✓ LOG: "High loss detected"
+
+Epoch 4, Step 2000:
+  ✓ IF accuracy > 0.85: SAVE "best_model"
+
+═══════════════════════════════════════════════════════════
+📊 System Metrics
+═══════════════════════════════════════════════════════════
+
+Average GPU Usage: 82.6%
+Peak GPU Usage: 92%
+Average RAM Usage: 12.7GB
+Peak RAM Usage: 13.5GB
+Average Temperature: 72°C
+Peak Temperature: 78°C
+
+Throughput: 3.7 samples/sec
+Average Latency: 270ms/step
+```
+
+**Filter by Metric:**
+```bash
+okto logs pizzabot_v1 --metric loss
+okto logs pizzabot_v1 --metric accuracy
+okto logs pizzabot_v1 --metric gpu_usage
+```
+
+---
+
+### `okto tune`
+
+Auto-tune training parameters using the CONTROL block for intelligent optimization.
+
+**Usage:**
+```bash
+okto tune [--file <path>]
+```
+
+**Options:**
+- `--file <PATH>` - Path to OktoScript file (default: `scripts/train.okt`)
+
+**What it does:**
+- Uses CONTROL block logic to auto-adjust training
+- Can adjust learning rate dynamically
+- Can change batch size based on memory
+- Can activate early stopping
+- Can balance classes automatically
+- This is unique in the market
+
+**Example:**
+```bash
+okto tune
+okto tune --file scripts/train.okt
+```
+
+**Output:**
+```
+🐙 OktoEngine v0.1
+🎛️  Auto-tuning training...
+
+📄 Reading: scripts/train.okt
+✓ CONTROL block detected
+✓ MONITOR block detected
+
+🚀 Starting tuned training...
+
+Epoch 1:
+  Loss: 2.345
+  ✓ CONTROL: Monitoring metrics...
+
+Epoch 2:
+  Loss: 1.892
+  ✓ CONTROL: Loss improving, continuing...
+
+Epoch 3:
+  Loss: 1.654
+  ⚠️  CONTROL: Loss plateau detected
+  ✓ CONTROL: Reducing learning rate from 0.0001 to 0.00005
+  ✓ CONTROL: Adjusting batch size from 32 to 16
+
+Epoch 4:
+  Loss: 1.456
+  ✓ CONTROL: Learning rate adjustment successful
+  ✓ CONTROL: Loss improving again
+
+Epoch 5:
+  Loss: 1.234
+  ✓ CONTROL: Best model saved (accuracy improved)
+
+✅ Auto-tuning completed!
+📊 Final metrics:
+  Loss: 1.234 (improved from 2.345)
+  Accuracy: 0.892 (improved from 0.654)
+  Optimizations applied: 3
+```
+
+**What makes it unique:**
+- Real-time parameter adjustment based on metrics
+- Uses CONTROL block logic for decision-making
+- No manual intervention needed
+- Adapts to training conditions automatically
+
+---
+
+### `okto exit`
+
+Exit interactive mode (chat, tune, or other interactive sessions).
+
+**Usage:**
+```bash
+okto exit
+```
+
+**When to use:**
+- Exiting chat mode (alternative to `/exit` command)
+- Exiting interactive tuning session
+- Exiting session context
+
+**Example:**
+```bash
+# In chat mode
+You: /exit
+# or
+okto exit
+
+# In interactive tuning
+okto tune --interactive
+# ... tuning session ...
+okto exit
+```
+
+---
+
 ## Utility Commands
 
 ### `okto doctor`
@@ -513,6 +1030,65 @@ okto eval
 
 # 6. Export model
 okto export --format okm
+
+# 7. Convert to different formats
+okto convert --input export/model.okm --from okm --to onnx --output export/model.onnx
+
+# 8. Test inference
+okto infer --model export/model.okm --text "Hello, how can I help?"
+
+# 9. Interactive chat
+okto chat --model export/model.okm
+
+# 10. View training logs
+okto logs my-chatbot
+```
+
+### Inference Workflow
+
+```bash
+# Direct inference
+okto infer --model models/chatbot.okm --text "What are your business hours?"
+
+# Interactive chat session
+okto chat --model models/chatbot.okm
+# ... chat interaction ...
+# Type '/exit' to quit
+
+# Compare two model versions
+okto compare models/v1.okm models/v2.okm
+```
+
+### Conversion Workflow
+
+```bash
+# Convert PyTorch to multiple formats
+okto convert --input model.pt --from pt --to gguf --output model.gguf
+okto convert --input model.pt --from pt --to onnx --output model.onnx
+okto convert --input model.pt --from pt --to tflite --output model.tflite
+
+# Convert for mobile deployment
+okto convert --input model.pt --from pt --to tflite --output model.tflite
+
+# Convert for web deployment
+okto convert --input model.pt --from pt --to onnx --output model.onnx
+```
+
+### Monitoring and Analysis Workflow
+
+```bash
+# View training logs
+okto logs my-model
+
+# View specific metrics
+okto logs my-model --metric loss
+okto logs my-model --metric gpu_usage
+
+# Auto-tune training
+okto tune
+
+# Compare model versions
+okto compare models/v1.okm models/v2.okm
 ```
 
 ### Debug Workflow
