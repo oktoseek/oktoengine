@@ -107,24 +107,77 @@ EXPORT { format: ["okm"] }
 
 Professional command-line interface with intuitive commands:
 
+**Core Commands:**
 ```bash
 okto init          # Initialize new projects
 okto validate      # Validate OktoScript files
 okto train         # Train models
 okto eval          # Evaluate models
 okto export        # Export to multiple formats
-okto doctor        # System diagnostics
-okto upgrade       # Auto-update engine
-okto about         # Engine information
+okto convert       # Convert between formats (PyTorch, ONNX, GGUF, TFLite, OktoModel)
 ```
+
+**Inference Commands:**
+```bash
+okto infer         # Direct inference (single input/output)
+okto chat          # Interactive chat mode with session context
+```
+
+**Analysis Commands:**
+```bash
+okto compare       # Compare two models (latency, accuracy, loss)
+okto logs          # View historical training logs and CONTROL decisions
+okto tune          # Auto-tune training using CONTROL block logic
+```
+
+**Utility Commands:**
+```bash
+okto list          # List projects, models, datasets, or exports
+okto doctor        # System diagnostics and dependency checking
+okto upgrade       # Auto-update engine to latest version
+okto about         # Engine and language information
+okto exit          # Exit interactive mode
+```
+
+**What you can do:**
+- 🚀 **Train** models with full fine-tuning or LoRA adapters
+- 🔄 **Convert** models between formats for different deployment targets
+- 💬 **Chat** interactively with trained models
+- 📊 **Compare** model versions to find the best one
+- 📈 **Monitor** training with real-time logs and metrics
+- 🎛️ **Auto-tune** training parameters intelligently
+- 🔍 **Validate** configurations before training
+- 📦 **Export** to production-ready formats
 
 ### 🔧 **Advanced Training Capabilities**
 
-- **Full Fine-tuning** - Train entire models from scratch
-- **LoRA Fine-tuning** - Efficient adapter-based training
-- **Multi-dataset Training** - Combine datasets with weighted sampling
-- **Automatic Checkpointing** - Never lose progress
-- **Real-time Metrics** - Monitor training in the terminal
+**Training Methods:**
+- **Full Fine-tuning** - Train entire models from scratch with complete parameter updates
+- **LoRA Fine-tuning** - Efficient adapter-based training (LoRA, QLoRA, PEFT) with minimal memory footprint
+- **Multi-dataset Training** - Combine multiple datasets with weighted sampling and custom mixing strategies
+- **Model Adapters** - Apply pre-trained adapters (LoRA/PEFT) to base models for rapid customization
+
+**Intelligent Training Control:**
+- **Automatic Checkpointing** - Never lose progress with smart checkpoint management
+- **Real-time Metrics** - Monitor training in the terminal with live updates
+- **CONTROL Block** - Define conditional logic (IF, WHEN, EVERY) for autonomous decision-making
+- **Auto-parameter Adjustment** - Automatically adjust learning rate, batch size, and other parameters based on metrics
+- **Early Stopping** - Intelligent stopping when model performance plateaus or diverges
+- **Memory-aware Training** - Automatically reduce batch size when GPU memory is low
+
+**Monitoring & Governance:**
+- **MONITOR Block** - Track any metric (loss, accuracy, GPU usage, throughput, latency, confidence, etc.)
+- **GUARD Block** - Safety and ethics protection (hallucination, toxicity, bias detection)
+- **BEHAVIOR Block** - Control model personality, verbosity, language, and response style
+- **STABILITY Block** - Training safety controls (NaN detection, divergence prevention)
+- **EXPLORER Block** - AutoML-style hyperparameter search and optimization
+
+**What makes it unique:**
+- 🧠 **Decision-driven** - Models can make autonomous decisions during training
+- 🔄 **Self-adapting** - Automatically adjusts parameters based on real-time metrics
+- 🛡️ **Safe by design** - Built-in safety guards and content filtering
+- 📊 **Fully observable** - Complete visibility into training process and decisions
+- ⚡ **Production-ready** - Export to multiple formats for deployment
 
 ### 📊 **Detailed Metrics & Monitoring**
 
